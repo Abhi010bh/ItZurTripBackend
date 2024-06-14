@@ -7,6 +7,8 @@ const bcrypt=require('bcrypt')
 app.use(cors({origin:true,credentials:true}))
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+const User=require('./src/routes/Users')
+const connectDB = require('./src/db/conn')
 
 process.on('unhandledRejection', error => {
     console.error('Unhandled promise rejection:', error);
@@ -26,9 +28,15 @@ app.get('/',(req,res)=>{
 
 })
 
+app.use('/User',User)
+
 app.listen(port,'0.0.0.0',()=>{
     status.Status="Listening"
     status.PortNo=port
     console.log(`App listening on ${status.PortNo}`);
+    connectDB()
     
 })
+
+
+//mongodb+srv://abhibh01234:jyBnTLLtes7e18Qi@izt01.zbceor8.mongodb.net/?retryWrites=true&w=majority&appName=IZT01
