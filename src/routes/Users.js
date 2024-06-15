@@ -75,7 +75,11 @@ router.post('/login', async (req, res) => {
 });
 
 router.get('/tokenTest', Authenticate,async (req,res)=>{
-    res.status(200).send("Ok")
+    try{
+        res.status(200).send("Ok")
+    }catch(e){
+        res.status(500).json(e.message)
+    }
 })
 
 

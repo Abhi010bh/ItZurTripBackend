@@ -4,20 +4,27 @@ const bcrypt = require('bcrypt')
 const bodyparser = require('body-parser')
 const connectDB = require('../../src/db/conn')
 router.use(bodyparser.json())
-const tripModel = require('../models/Trips')
+const User=require('../models/Users')
+const tripModel=require('../models/Trip')
 const jwt = require('jsonwebtoken')
 const Authenticate=require('../controllers/auth.authenticate')
 
 
 /**
- * @route POST Trip/trips
+ * @route POST Trip/addTrip
  * @description registering a trip.
  * @access Public
  */
-router.post('/trips', async (req, res) => {
+router.post('/addTrip', async (req, res) => {
     try {
 
         console.log(req.body)
+
+        const userExists = await User.findById(req.body.emailID)
+
+        if(!userExists){
+            return res.status(400).send({ message: "Invalid User" })
+        }
         
         const trip = new tripModel({
             tripID:req.body.tripID,
@@ -29,6 +36,7 @@ router.post('/trips', async (req, res) => {
         await trip.save().then((result)=>{
             res.status(201).send(` Trip was created succesfully`)
         })
+    
     }
     catch(e){
         console.log(e)
@@ -86,7 +94,7 @@ router.delete('/trips/:id', async (req, res) => {
     }
 });
 
-
+module.exports=router
 
 
 

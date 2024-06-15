@@ -8,6 +8,7 @@ app.use(cors({origin:true,credentials:true}))
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 const User=require('./src/routes/Users')
+const Trip=require('./src/routes/Trips')
 const connectDB = require('./src/db/conn')
 
 process.on('unhandledRejection', error => {
@@ -29,6 +30,7 @@ app.get('/',(req,res)=>{
 })
 
 app.use('/User',User)
+app.use('/Trip',Trip)
 
 app.listen(port,'0.0.0.0',()=>{
     status.Status="Listening"
