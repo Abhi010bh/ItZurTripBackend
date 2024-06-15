@@ -15,19 +15,22 @@ const Authenticate=require('../controllers/auth.authenticate')
  * @description registering a trip.
  * @access Public
  */
-router.post('/addTrip', async (req, res) => {
+router.post('/addTrip',Authenticate,async (req, res) => {
     try {
 
         console.log(req.body)
 
-        const userExists = await User.findById(req.body.emailID)
+        const userExists = await User.findOne({emailID:req.body.emailID})
+
+        console.log(userExists);
 
         if(!userExists){
             return res.status(400).send({ message: "Invalid User" })
         }
         
         const trip = new tripModel({
-            tripID:req.body.tripID,
+            emailID:userExists.emailID,
+            _id:req.body.tripID,
             tripName:req.body.tripName,
             source:req.body.source,
             destination:req.body.destination,
@@ -46,9 +49,28 @@ router.post('/addTrip', async (req, res) => {
     }
 }) 
 
-router.get('/trips/:id', async (req, res) => {
-    res.status(200).send("Ok")
+router.get('/trips/:id',Authenticate ,async (req, res) => {
+    try{
+        const trip=await tripModel.findById(req.params.id)
 
+        console.log(trip);
+        
+        if(!trip){
+            return res.status(404).json({error:"Trip ID doesn't exist"})
+        }
+
+        if(trip.emailID!==req.userData.emailID){
+            return res.status(403).json({error:"Access denied: User doesn't have authorisation!"})
+        }
+
+        return res.status(200).json(trip)
+    }
+    catch(e){
+        console.log(e);
+
+        return res.status(500).send(e)
+    }
+    
 })
 
 router.put('/trips/:id', async (req, res) => {
