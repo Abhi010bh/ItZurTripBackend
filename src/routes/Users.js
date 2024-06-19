@@ -5,6 +5,7 @@ const bodyparser = require('body-parser')
 const connectDB = require('../../src/db/conn')
 router.use(bodyparser.json())
 const userModel = require('../models/Users')
+const alidator = require('validator')
 const jwt = require('jsonwebtoken')
 const Authenticate=require('../controllers/auth.authenticate')
 
@@ -16,6 +17,17 @@ const Authenticate=require('../controllers/auth.authenticate')
  */
 router.post('/register', async (req, res) => {
     try {
+        const { emailID, UserName, password } = req.body;
+
+        // Email validation
+        if (!validator.isEmail(emailID)) {
+            return res.status(400).send('Invalid email');
+        }
+
+        // Password length check
+        if (password.length < 8) {
+            return res.status(400).send('Password must be at least 8 characters long');
+        }
 
         console.log(req.body)
         
