@@ -19,8 +19,9 @@ router.post('/addTrip',Authenticate,async (req, res) => {
     try {
 
         console.log(req.body)
+        console.log(req.userData.emailID)
 
-        const userExists = await User.findOne({emailID:req.body.emailID})
+        const userExists = await User.findOne({emailID:req.userData.emailID})
 
         console.log(userExists);
 
@@ -30,14 +31,15 @@ router.post('/addTrip',Authenticate,async (req, res) => {
         
         const trip = new tripModel({
             emailID:userExists.emailID,
-            _id:req.body.tripID,
             tripName:req.body.tripName,
             source:req.body.source,
             destination:req.body.destination,
+            startDate: req.body.startDate,
+            endDate: req.body.endDate
         }) 
 
         await trip.save().then((result)=>{
-            res.status(201).send(` Trip was created succesfully`)
+            res.status(201).send({message:'Trip was created succesfully',tripId:result._id})
         })
     
     }
@@ -49,29 +51,26 @@ router.post('/addTrip',Authenticate,async (req, res) => {
     }
 }) 
 
-router.get('/trips/:id',Authenticate ,async (req, res) => {
-    try{
-        const trip=await tripModel.findById(req.params.id)
+// Fetch trip details including users
+router.get('/trips/:id', Authenticate, async (req, res) => {
+    try {
+        const trip = await tripModel.findOne(req.params.id).populate('users');
 
-        console.log(trip);
-        
-        if(!trip){
-            return res.status(404).json({error:"Trip ID doesn't exist"})
+        if (!trip) {
+            return res.status(404).json({ error: "Trip not found" });
         }
 
-        if(trip.emailID!==req.userData.emailID){
-            return res.status(403).json({error:"Access denied: User doesn't have authorisation!"})
+        if (trip.emailID !== req.userData.emailID && !trip.users.includes(req.userData.userID)) {
+            return res.status(403).json({ error: "Access denied: Unauthorized user" });
         }
 
-        return res.status(200).json(trip)
-    }
-    catch(e){
+        res.status(200).json(trip);
+    } catch (e) {
         console.log(e);
-
-        return res.status(500).send(e)
+        res.status(500).send(e.message);
     }
-    
-})
+});
+
 
 router.put('/trips/:id', async (req, res) => {
     try {
@@ -91,6 +90,32 @@ router.put('/trips/:id', async (req, res) => {
         res.status(500).send(e.message);
     }
 });
+
+// Add user to a trip
+router.post('/trips/:id/addUser', Authenticate, async (req, res) => {
+    try {
+        const trip = await tripModel.findById(req.params.id);
+
+        if (!trip) {
+            return res.status(404).json({ error: "Trip not found" });
+        }
+
+        const user = await User.findOne({ emailID: req.body.emailID });
+
+        if (!user) {
+            return res.status(404).json({ error: "User not found" });
+        }
+
+        trip.users.push(user._id);
+        await trip.save();
+
+        res.status(200).json({ message: "User added to trip successfully", trip });
+    } catch (e) {
+        console.log(e);
+        res.status(500).send(e.message);
+    }
+});
+
 
 
 router.delete('/trips/:id', async (req, res) => {

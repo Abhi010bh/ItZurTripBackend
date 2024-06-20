@@ -46,7 +46,7 @@ router.post('/register', async (req, res) => {
 router.post('/login', async (req, res) => {
     try {
         const user = await userModel.findOne({ emailID: req.body.emailID });
-
+        console.log(req.body)
         if (user) {
 
             const isPasswordValid = await bcrypt.compare(req.body.password, user.password);
@@ -86,3 +86,4 @@ router.get('/tokenTest', Authenticate,async (req,res)=>{
 
 
 module.exports=router
+
