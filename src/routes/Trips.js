@@ -39,6 +39,7 @@ router.post('/addTrip',Authenticate,async (req, res) => {
         }) 
 
         await trip.save().then((result)=>{
+            console.log(result._id)
             res.status(201).send({message:'Trip was created succesfully',tripId:result._id})
         })
     
@@ -51,10 +52,10 @@ router.post('/addTrip',Authenticate,async (req, res) => {
     }
 }) 
 
-// Fetch trip details including users
+// Fetch trip details including users for a specific trip
 router.get('/trips/:id', Authenticate, async (req, res) => {
     try {
-        const trip = await tripModel.findOne(req.params.id).populate('users');
+        const trip = await tripModel.findById(req.params.id).populate('users');
 
         if (!trip) {
             return res.status(404).json({ error: "Trip not found" });
@@ -65,6 +66,29 @@ router.get('/trips/:id', Authenticate, async (req, res) => {
         }
 
         res.status(200).json(trip);
+    } catch (e) {
+        console.log(e);
+        res.status(500).send(e.message);
+    }
+});
+
+// Fetch all trips for a user
+router.get('/trips', Authenticate, async (req, res) => {
+    try {
+        console.log(req.userData.email);
+        const userExists = await User.findOne({ emailID: req.userData.emailID });
+        
+        console.log(userExists);
+
+        if (!userExists) {
+            return res.status(400).send({ message: "Invalid User" });
+        }
+
+        // Find all trips where user's emailID matches
+        const trips = await tripModel.find({ emailID: userExists.emailID });
+        console.log(trips);
+        res.status(200).json(trips);
+
     } catch (e) {
         console.log(e);
         res.status(500).send(e.message);

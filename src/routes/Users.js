@@ -1,73 +1,53 @@
-const express = require('express')
-const router = express.Router()
-const bcrypt = require('bcrypt')
-const bodyparser = require('body-parser')
-const connectDB = require('../../src/db/conn')
-router.use(bodyparser.json())
-const userModel = require('../models/Users')
-const alidator = require('validator')
-const jwt = require('jsonwebtoken')
-const Authenticate=require('../controllers/auth.authenticate')
+const express = require('express');
+const router = express.Router();
+const bcrypt = require('bcrypt');
+const bodyParser = require('body-parser');
+const validator = require('validator');
+const jwt = require('jsonwebtoken');
+const Authenticate = require('../controllers/auth.authenticate');
+const userModel = require('../models/Users');
 
+router.use(bodyParser.json());
 
-/**
- * @route POST User/register
- * @description Registering a new user.
- * @access Public
- */
 router.post('/register', async (req, res) => {
     try {
         const { emailID, UserName, password } = req.body;
 
-        // Email validation
         if (!validator.isEmail(emailID)) {
-            return res.status(400).send('Invalid email');
+            return res.status(400).send({ error: 'Invalid email' });
         }
 
-        // Password length check
         if (password.length < 8) {
-            return res.status(400).send('Password must be at least 8 characters long');
+            return res.status(400).send({ error: 'Password must be at least 8 characters long' });
         }
 
-        console.log(req.body)
         
+
         const user = new userModel({
             emailID:req.body.emailID,
             UserName:req.body.UserName,
-            password:req.body.password
-        }) 
+            password,
+        });
 
-        await user.save().then((result)=>{
-            res.status(201).send(`user ID:${user._id} was created succesfully`)
-        })
+        await user.save();
+        res.status(201).send({ message: `User ID: ${user._id} was created successfully` });
+    } catch (e) {
+        console.error(e);
+        res.status(500).send({ error: e.message });
     }
-    catch(e){
-        console.log(e)
+});
 
-        res.status(500).send(e.message).json()
-
-    }
-})      
-
-
-/**
- * @route POST User/login
- * @description Authorising/Signing the admin
- * @access Public
-*/
 router.post('/login', async (req, res) => {
     try {
         const user = await userModel.findOne({ emailID: req.body.emailID });
-        console.log(req.body)
+        console.log(user);
         if (user) {
-
             const isPasswordValid = await bcrypt.compare(req.body.password, user.password);
-            //compare requested password with hashed password
 
             if (isPasswordValid) {
-                const token = jwt.sign({ emailID: user.emailID, timeStamp: Date.now() }, 'secret-key', { expiresIn: '1h' })
+                const token = jwt.sign({ emailID: user.emailID, timeStamp: Date.now() }, 'secret-key', { expiresIn: '1h' });
                 res.status(200).json({
-                    token: token,
+                    token,
                     expiresIn: 3600,
                     emailID: user.emailID,
                 });
@@ -79,23 +59,16 @@ router.post('/login', async (req, res) => {
         }
     } catch (error) {
         console.error(error);
-        res.status(500).json({
-            error:
-                "Error occurred while finding user."
-        });
+        res.status(500).json({ error: "Error occurred while finding user." });
     }
 });
 
-
-
-router.get('/tokenTest', Authenticate,async (req,res)=>{
-    try{
-        res.status(200).send("Ok")
-    }catch(e){
-        res.status(500).json(e.message)
+router.get('/tokenTest', Authenticate, async (req, res) => {
+    try {
+        res.status(200).send("Ok");
+    } catch (e) {
+        res.status(500).json({ error: e.message });
     }
-})
+});
 
-
-module.exports=router
-
+module.exports = router;

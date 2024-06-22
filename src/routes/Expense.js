@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const Expense = require('../models/Expense');
 const Trip = require('../models/Trip');
-const User = require('../models/User');
+const User = require('../models/Users');
 const Authenticate = require('../controllers/auth.authenticate');
 
 router.use(express.json());
@@ -20,7 +20,7 @@ router.post('/trips/:tripId/expenses', Authenticate, async (req, res) => {
             return res.status(404).json({ error: "Trip not found" });
         }
 
-        const user = await User.findById(req.body.paidBy);
+        const user = await User.findOne(req.body.paidBy);
 
         if (!user) {
             return res.status(404).json({ error: "User not found" });
@@ -31,7 +31,7 @@ router.post('/trips/:tripId/expenses', Authenticate, async (req, res) => {
             description: req.body.description,
             amount: req.body.amount,
             date: req.body.date,
-            paidBy: user._id
+            paidBy: user.emailID
         });
 
         await expense.save();
