@@ -32,10 +32,10 @@ router.post('/addTrip',Authenticate,async (req, res) => {
         const trip = new tripModel({
             emailID:userExists.emailID,
             tripName:req.body.tripName,
-            source:req.body.source,
-            destination:req.body.destination,
             startDate: req.body.startDate,
-            endDate: req.body.endDate
+            endDate: req.body.endDate,
+            waypoints:req.body.trips,
+            totalDistance:req.body.totalDistance
         }) 
 
         await trip.save().then((result)=>{
