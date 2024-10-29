@@ -53,6 +53,7 @@ router.post('/trips/:tripId/expenses', Authenticate, async (req, res) => {
  */
 router.get('/trips/:tripId/expenses', Authenticate, async (req, res) => {
     try {
+        console.log(req)
         const expenses = await Expense.find({ tripID: req.params.tripId }).populate('paidBy', 'emailID UserName');
 
         if (!expenses) {

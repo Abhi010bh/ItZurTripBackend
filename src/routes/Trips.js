@@ -96,7 +96,7 @@ router.get('/trips', Authenticate, async (req, res) => {
 });
 
 
-router.put('/trips/:id', async (req, res) => {
+router.put('/trips/:id',Authenticate,async (req, res) => {
     try {
         const tripId = req.params.id;
         const updatedData = req.body;
