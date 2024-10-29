@@ -12,7 +12,7 @@ router.use(express.json());
  * @description Add an expense to a trip
  * @access Private
  */
-router.post('/trips/:tripId/expenses', Authenticate, async (req, res) => {
+router.post('/:tripId/expenses', Authenticate, async (req, res) => {
     try {
         const trip = await Trip.findById(req.params.tripId);
 
@@ -20,7 +20,7 @@ router.post('/trips/:tripId/expenses', Authenticate, async (req, res) => {
             return res.status(404).json({ error: "Trip not found" });
         }
 
-        const user = await User.findOne(req.body.paidBy);
+        const user = await User.findOne({emailID:req.body.paidBy});
 
         if (!user) {
             return res.status(404).json({ error: "User not found" });
@@ -51,7 +51,7 @@ router.post('/trips/:tripId/expenses', Authenticate, async (req, res) => {
  * @description Get all expenses for a trip
  * @access Private
  */
-router.get('/trips/:tripId/expenses', Authenticate, async (req, res) => {
+router.get('/:tripId/expenses', Authenticate, async (req, res) => {
     try {
         console.log(req)
         const expenses = await Expense.find({ tripID: req.params.tripId }).populate('paidBy', 'emailID UserName');
