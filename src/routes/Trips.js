@@ -8,6 +8,7 @@ const User=require('../models/Users')
 const tripModel=require('../models/Trip')
 const jwt = require('jsonwebtoken')
 const Authenticate=require('../controllers/auth.authenticate')
+const expenseModel = require('../models/Expense')
 
 
 /**
@@ -29,14 +30,17 @@ router.post('/addTrip',Authenticate,async (req, res) => {
             return res.status(400).send({ message: "Invalid User" })
         }
         
-        const trip = new tripModel({
-            emailID:userExists.emailID,
-            tripName:req.body.tripName,
-            startDate: req.body.startDate,
-            endDate: req.body.endDate,
-            waypoints:req.body.trips,
-            totalDistance:req.body.totalDistance
-        }) 
+     
+
+   const trip = new tripModel({
+    emailID:userExists.emailID,
+    tripName:req.body.tripName,
+    startDate: req.body.startDate,
+    endDate: req.body.endDate,
+    waypoints:req.body.tripArray.trips,
+    totalDistance:req.body.totalDistance
+}) 
+
 
         await trip.save().then((result)=>{
             console.log(result._id)
@@ -115,6 +119,8 @@ router.put('/trips/:id',Authenticate,async (req, res) => {
     }
 });
 
+
+
 // Add user to a trip
 router.post('/trips/:id/addUser', Authenticate, async (req, res) => {
     try {
@@ -164,6 +170,51 @@ router.delete('/trips/:id', async (req, res) => {
         })
     }
 });
+
+router.get('/:tripId/analytics',async (req,res)=>{
+    const tripId=req.params.tripId;
+    console.log("Request reached analysis")
+
+    try{
+        const trip=await tripModel.findById(tripId)
+            .populate('users')
+            .populate('expenses')
+            .populate('waypoints')      //kinda similar to SQL joins, object Id is the joining reference
+
+        if(!trip){
+            return res.status(404).json({error:'Trip not found!'})
+        }
+
+        const totalParticipants = trip.users.length;
+
+        const totalExpenses = trip.expenses.reduce((sum, expense) => sum + expense.amount, 0);
+
+        const expenseBreakdown = trip.expenses.reduce((acc, expense) => {
+            const existingCategory = acc.find(item => item.category === expense.category);
+            if (existingCategory) {
+                existingCategory.amount += expense.amount;
+            } else {
+                acc.push({ category: expense.category, amount: expense.amount });
+            }
+            return acc;
+        }, []);
+        
+       
+        const report={
+            TotalDistance:trip.totalDistance,
+            totalParticipants,
+            totalExpenses,
+            ExpenseBreakdown:expenseBreakdown
+        }
+
+        return res.status(200).json(report)
+
+    }catch(e){
+        console.log(e)
+        return res.status(500).json({error:e.message})
+    }
+})
+
 
 module.exports=router
 

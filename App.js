@@ -10,6 +10,7 @@ app.use(express.urlencoded({ extended: true }));
 const User=require('./src/routes/Users')
 const Trip=require('./src/routes/Trips')
 const Expense=require('./src/routes/Expense')
+const Task=require('./src/routes/Task')
 const connectDB = require('./src/db/conn')
 
 process.on('unhandledRejection', error => {
@@ -33,6 +34,7 @@ app.get('/',(req,res)=>{
 app.use('/User',User)
 app.use('/Trip',Trip)
 app.use('/Expense',Expense)
+app.use('/Task',Task);
 app.listen(port,'0.0.0.0',()=>{
     status.Status="Listening"
     status.PortNo=port

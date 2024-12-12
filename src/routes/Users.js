@@ -50,6 +50,8 @@ router.post('/login', async (req, res) => {
                     token,
                     expiresIn: 3600,
                     emailID: user.emailID,
+                    userName:user.UserName,
+                    userID:user._id
                 });
             } else {
                 res.status(401).json({ error: "Authentication failed" });
